@@ -51,7 +51,7 @@ class Whitespace(Token):
                 if nextCharacter == "\n": return 2 #Actual newlines treated as 1 character. 
                 if nextCharacter == "\r": return 3
                 if nextCharacter == "\t": return 4
-                return -1
+                return -2
             case 1 | 2 | 3 | 4: return -1
             case _: raise Exception("Invalid current state")
 
@@ -336,11 +336,17 @@ class RBrace(Token):
     def getFinalStates() -> List[int]:
         return [1]
 
+class LexerToken:
+    def __init__(self, value: str, type: Type[Token]) -> None:
+        self.value: str = value
+        self.type: Type[Token] = type
+
 class Lexer:
     def __init__(self, inputStream: str) -> None:
         self.stream: str = inputStream
         self.locationInStream: int = 0
         self.streamLength: int = len(inputStream)
+        self.streamTokenization: List[LexerToken] = []
 
     def scanStream(self) -> None:
         while(self.locationInStream < self.streamLength):
@@ -350,13 +356,13 @@ class Lexer:
                 if result == -1: continue
 
                 self.locationInStream = result + 1 #start should be the next char after this token
-                if tempStart != self.locationInStream:
-                    print(f"String {self.stream[tempStart:self.locationInStream]} is {tokenClass.TOKEN_STRING}")
+                if tempStart != self.locationInStream: self.streamTokenization.append(LexerToken(self.stream[tempStart:self.locationInStream], tokenClass))
                 break
 
             if self.locationInStream == tempStart:
                 print(f"Couldn't make token for {self.stream[tempStart]}")
-                self.locationInStream += 1
+                raise Exception("Failed to scan file")
+            
 
     #Returns the final location of the token or -1 if failed   
     def scanForToken(self, token: Type[Token]) -> int:
@@ -371,7 +377,6 @@ class Lexer:
 
             currentLocation += 1
             state = nextState
-
         if state in token.getFinalStates(): return currentLocation - 1 #Current location is equal to len(stream) so return the length - 1
         return -1
 
@@ -387,11 +392,11 @@ class Lexer:
 def main():
     with open("testText.txt", newline='', mode="r") as file:
         stream: str = file.read()
-        
-        print(stream)
-
         lexer: Lexer = Lexer(stream)
         lexer.scanStream()
+
+    for lexToken in lexer.streamTokenization:
+        print(f"String {lexToken.value} is {lexToken.type.TOKEN_STRING}")
 
 if __name__ == "__main__":
     main()
