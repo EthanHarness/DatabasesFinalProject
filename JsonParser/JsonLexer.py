@@ -45,16 +45,3 @@ class Lexer:
             state = nextState
         if state in token.getFinalStates(): return currentLocation - 1 #Current location is equal to len(stream) so return the length - 1
         return -1
-
-
-def main():
-    with open("testText.txt", newline='', mode="r") as file:
-        stream: str = file.read()
-        lexer: Lexer = Lexer(stream)
-        lexer.scanStream()
-
-    for lexToken in lexer.streamTokenization:
-        print(f"String {lexToken.value} is {lexToken.type.TOKEN_STRING}")
-
-if __name__ == "__main__":
-    main()

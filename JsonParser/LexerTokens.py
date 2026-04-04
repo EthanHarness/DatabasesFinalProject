@@ -39,7 +39,6 @@ class Token(ABC):
     def getFinalStates() -> List[int]:
         pass
 
-
 class Whitespace(Token):
     TOKEN_STRING: str = "Whitespace"
 
@@ -52,7 +51,12 @@ class Whitespace(Token):
                 if nextCharacter == "\r": return 3
                 if nextCharacter == "\t": return 4
                 return -2
-            case 1 | 2 | 3 | 4: return -1
+            case 1 | 2 | 3 | 4: 
+                if nextCharacter == " ": return 1
+                if nextCharacter == "\n": return 2
+                if nextCharacter == "\r": return 3
+                if nextCharacter == "\t": return 4
+                return -1
             case _: raise Exception("Invalid current state")
 
     @staticmethod
