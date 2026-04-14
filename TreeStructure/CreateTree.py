@@ -1,6 +1,7 @@
 from __future__ import annotations
 from enum import Enum
-from typing import Any, List
+from typing import Any
+from collections import deque
 
 class NodeType(Enum):
     OBJECT = 1
@@ -17,6 +18,9 @@ class Node:
     def addChild(self, child: Node) -> Node:
         self.children.append(child)
         return child
+    
+    def nodeToString(self) -> str:
+        return f"Label: {self.label} ------ Type: {self.type}"
 
     @staticmethod
     def recursivelyCreateNodeFromObjectLevel(key: str, label: dict|list|Any) -> Node:
@@ -59,5 +63,16 @@ class JsonTree:
 
         for key in docRoot:
             self.root.addChild(Node.recursivelyCreateNodeFromObjectLevel(key, docRoot[key]))
+
+    def printTreeBFS(self):
+        queue = deque([self.root])
+
+        while queue:
+            currentNode = queue.popleft()
+            print(currentNode.nodeToString())
+
+            if len(currentNode.children) != 0:
+                for child in currentNode.children:
+                    queue.append(child)
 
     

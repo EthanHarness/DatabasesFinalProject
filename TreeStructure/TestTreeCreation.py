@@ -6,6 +6,7 @@ def main():
     data = loadJson(path)
     tree = JsonTree(data)
 
+    tree.printTreeBFS()
 
 if __name__ == "__main__":
     main()
