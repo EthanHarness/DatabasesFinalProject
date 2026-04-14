@@ -1,11 +1,23 @@
 from typing import List, Type
 
-from LexerTokens import Token 
+from JsonParser.LexerTokens import Token 
+from JsonParser.LexerTokens import Number, StringT, TrueValue, FalseValue, NullValue
 
 class LexerToken:
     def __init__(self, value: str, type: Type[Token]) -> None:
         self.value: str = value
         self.type: Type[Token] = type
+
+    def getCastedValue(self) -> bool|str|int|float|None:
+        match self.type.TOKEN_STRING:
+            case StringT.TOKEN_STRING: return self.value
+            case TrueValue.TOKEN_STRING: return True
+            case FalseValue.TOKEN_STRING: return False
+            case NullValue.TOKEN_STRING: return None
+            case Number.TOKEN_STRING: 
+                if '.' in self.value: return float(self.value)
+                return int(self.value)
+            case _: return None
 
 class Lexer:
     def __init__(self, inputStream: str) -> None:
