@@ -1,7 +1,7 @@
 from typing import List, Type
 
-from LexerTokens import Token 
-from LexerTokens import Number, StringT, TrueValue, FalseValue, NullValue
+from JsonParser.LexerTokens import Token 
+from JsonParser.LexerTokens import Number, StringT, TrueValue, FalseValue, NullValue
 
 class LexerToken:
     def __init__(self, value: str, type: Type[Token]) -> None:

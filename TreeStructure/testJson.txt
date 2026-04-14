@@ -1,0 +1,8 @@
+{
+    "title": "Star Wars - A New Hope",
+    "running time": 125,
+    "cast": {
+        "Han": "Ford",
+        "Leia": "Fisher"
+    }
+}

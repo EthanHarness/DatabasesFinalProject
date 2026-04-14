@@ -2,9 +2,9 @@ from __future__ import annotations
 from abc import ABC
 from typing import List
 
-from LexerTokens import Whitespace, Number, StringT, TrueValue, FalseValue, NullValue, \
+from JsonParser.LexerTokens import Whitespace, Number, StringT, TrueValue, FalseValue, NullValue, \
     LBracket, RBracket, Comma, Colon, LBrace, RBrace
-from JsonLexer import Lexer, LexerToken
+from JsonParser.JsonLexer import Lexer, LexerToken
 
 class ParserConstruct(ABC):
     pass
