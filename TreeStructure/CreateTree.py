@@ -60,10 +60,48 @@ class Node:
 class JsonTree:
     def __init__(self, docRoot: dict):
         self.root = Node(None, NodeType.OBJECT)
+        self.size = 0
+        self.degree = 0
+        self.height = 0
+
 
         for key in docRoot:
             self.root.addChild(Node.recursivelyCreateNodeFromObjectLevel(key, docRoot[key]))
+        
+        self.computeStats()
 
+    def computeStats(self):
+        self.computeStatsBFS()
+        self.height = self.computeStatsDFS(self.root)
+
+    def computeStatsBFS(self):
+        queue = deque([self.root])
+        count = 0
+        maxDegree = 0
+
+        while queue:
+            currentNode = queue.popleft()
+            count += 1
+            maxDegree = max(len(currentNode.children), maxDegree)
+
+            if len(currentNode.children) != 0:
+
+                for child in currentNode.children:
+                    queue.append(child)
+
+        self.degree = maxDegree
+        self.size = count
+
+    def computeStatsDFS(self, root: Node):
+        if len(root.children) == 0: return 1
+
+        maxHeight = 1
+        for child in root.children:
+            temp = self.computeStatsDFS(child)
+            maxHeight = max(maxHeight, temp)
+
+        return maxHeight + 1
+    
     def printTreeBFS(self):
         queue = deque([self.root])
 
