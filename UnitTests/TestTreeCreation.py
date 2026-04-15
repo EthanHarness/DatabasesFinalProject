@@ -2,7 +2,7 @@ from JsonParser.ParsedJson import loadJson
 from TreeStructure.CreateTree import JsonTree
 
 def main():
-    path = "./TreeStructure/testJson.txt"
+    path = "./UnitTests/TreeStructurePackageTestFile.txt"
     data = loadJson(path)
     tree = JsonTree(data)
 
