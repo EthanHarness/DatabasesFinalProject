@@ -1,4 +1,4 @@
-from JsonParser.JsonParser import loadJson
+from JsonParser.ParsedJson import loadJson
 
 def main():
     path = "./JsonParser/testText.txt"
