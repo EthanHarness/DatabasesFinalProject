@@ -1,0 +1,29 @@
+{
+  "string_example": "This is a string with a newline\n and a unicode character: \u2728",
+  "number_examples": {
+    "integer": 42,
+    "negative": -10,
+    "floating_point": 3.14159,
+    "scientific_notation": 1.05e+3
+  },
+  "boolean_examples": {
+    "is_active": true,
+    "is_retired": false
+  },
+  "null_example": null,
+  "array_example": [
+    "first element",
+    2,
+    {
+      "nested_object_in_array": true
+    },
+    [
+      "nested",
+      "array"
+    ]
+  ],
+  "object_example": {
+    "key": "value",
+    "description": "Objects contain key-value pairs where keys must be strings."
+  }
+}
