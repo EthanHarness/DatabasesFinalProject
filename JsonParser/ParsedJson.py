@@ -1,0 +1,96 @@
+from __future__ import annotations
+from typing import List
+
+from JsonParser.JsonLexer import LexerToken, Lexer
+from JsonParser.JsonParser import ParserConstruct, ObjectConstruct, ArrayConstruct, \
+    ValueConstruct, Parser
+
+class ParsedJson:
+    def __init__(self, document: List[ObjectConstruct]):
+        self.document = document
+        self.pythonDoc = {}
+        
+        self.createDocument()
+    
+    @staticmethod
+    def recursivelyCreateDocument(val: ParserConstruct):
+        if isinstance(val, ObjectConstruct):
+            res = {}
+            res[val.keyValue] = ParsedJson.recursivelyCreateDocument(val.value)
+            return res
+        
+        if isinstance(val, ArrayConstruct):
+            res = []
+            for x in val.value:
+                res.append(ParsedJson.recursivelyCreateDocument(x))
+            return res
+            
+        assert isinstance(val, ValueConstruct), "Somehow got a non value construct here. Fix."
+        if val.type == 0:
+            assert isinstance(val.value, LexerToken), "Somehow got non lexer token value here. Fix."
+            return val.value.getCastedValue()
+        
+        if isinstance(val.value, ArrayConstruct): return ParsedJson.recursivelyCreateDocument(val.value)
+
+        assert isinstance(val.value, List), "Somehow got non list type here. Fix."
+        res = {}
+        for x in val.value:
+            assert isinstance(x, ObjectConstruct), "Somehow got non object here. Fix."
+            res[x.keyValue] = ParsedJson.recursivelyCreateDocument(x.value)
+        return res
+
+    #Takes a parsed Json file and returns a dict representing the json data structure.
+    def createDocument(self):
+        for x in self.document:
+            self.pythonDoc[x.keyValue] = ParsedJson.recursivelyCreateDocument(x.value)
+
+    #Helper method to print a ParsedJson structure
+    def printDocument(self):
+        for index,x in enumerate(self.document):
+            pStr = self.recursivePrintValue(x, 0)
+            if index != len(self.document) - 1: print(f"{pStr[0:-1]},")
+            else: print(pStr)
+
+    @staticmethod
+    def recursivePrintValue(val: ParserConstruct, tabLevel=0) -> str:
+        tabString: str = "\t" * tabLevel
+        resStr: str = ""
+        if isinstance(val, ObjectConstruct):
+            resStr += f"{tabString}{{\n{tabString}\t{val.keyValue}:"
+            resStr += f"{ParsedJson.recursivePrintValue(val.value, tabLevel)}{tabString}}}\n"
+            return resStr
+        
+        if isinstance(val, ArrayConstruct):
+            resStr += f"\n{tabString}["
+            for x in val.value:
+                resStr += f"\n{tabString}\t\t {ParsedJson.recursivePrintValue(x, tabLevel+2)[0:-1]},"
+            resStr += f"\n{tabString}]\n"
+            return resStr
+
+        assert isinstance(val, ValueConstruct), "Somehow got a non value construct here. Fix."
+        if val.type == 0:
+            assert isinstance(val.value, LexerToken), "Somehow got non lexer token value here. Fix."
+            resStr += f"{val.value.value}\n"
+            return resStr
+
+        if isinstance(val.value, ArrayConstruct): 
+            resStr += ParsedJson.recursivePrintValue(val.value, tabLevel+2)
+            return resStr
+        
+        assert isinstance(val.value, List), "Somehow got non list type here. Fix."
+        for x in val.value: 
+            resStr += "\n"
+            resStr += ParsedJson.recursivePrintValue(x, tabLevel+2)
+        return resStr
+    
+
+#Works (probably) exactly like importing the json package and running json.load
+def loadJson(filePath: str = "") -> dict:
+    with open(filePath, newline='', mode="r") as file:
+        stream: str = file.read()
+        lexer: Lexer = Lexer(stream)
+        lexer.scanStream()
+
+        parser: Parser = Parser(lexer.streamTokenization)
+    parsed = ParsedJson(parser.ParseObject())
+    return parsed.pythonDoc

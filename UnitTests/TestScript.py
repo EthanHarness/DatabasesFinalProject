@@ -1,7 +1,7 @@
-from JsonParser.JsonParser import loadJson
+from JsonParser.ParsedJson import loadJson
 
 def main():
-    path = "./JsonParser/testText.txt"
+    path = "./UnitTests/JsonParserPackageTestFile.txt"
     data = loadJson(path)
 
     for key,value in data.items():
