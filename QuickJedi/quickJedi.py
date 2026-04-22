@@ -31,12 +31,12 @@ class QuickJedi:
         df[0][0] = 0.0
 
         #TODO: Fix this
-        for i in range(1, t1InputSize+1):
-            df[i][0] = 0.0
-            prevIChild = JsonTree.findIthChild(i-1, t1.root)
-            for k in range(1, len(prevIChild.children)+1):
-
-                df[i][0] += dt[prevIChild.offset][prevIChild.children[k-1] + 1] = 0
+        for i in t1.root.children:
+            temp = 0
+            for k in i.children: 
+                temp += dt[k.offset][0]
+            df[i.offset][0] = temp
+            dt[i.offset][0] = df[i.offset][0] + #gamma[nu][lambda] #TODO: Gamma
 
 
         
