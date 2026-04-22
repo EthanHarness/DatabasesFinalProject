@@ -14,6 +14,8 @@ class Node:
         self.label = label
         self.type = type
         self.children = []
+        
+        self.offset = None
 
     def addChild(self, child: Node) -> Node:
         self.children.append(child)
@@ -21,6 +23,9 @@ class Node:
     
     def nodeToString(self) -> str:
         return f"Label: {self.label} ------ Type: {self.type}"
+    
+    def setOffset(self, offset: int) -> None:
+        self.offset = offset
 
     @staticmethod
     def recursivelyCreateNodeFromObjectLevel(key: str, label: dict|list|Any) -> Node:
@@ -81,6 +86,7 @@ class JsonTree:
 
         while queue:
             currentNode = queue.popleft()
+            currentNode.setOffset(count)
             count += 1
             maxDegree = max(len(currentNode.children), maxDegree)
 
@@ -113,4 +119,14 @@ class JsonTree:
                 for child in currentNode.children:
                     queue.append(child)
 
+    @staticmethod
+    def findIthChild(childNumber: int, root: Node) -> Node:
+        if len(root.offset) == childNumber: return root
+        if len(root.children) == 0: return root
+
+        for child in root.children:
+            potential = JsonTree.findIthChild(childNumber, child)
+            if potential.offset == childNumber: return potential
+
+        return root
     
