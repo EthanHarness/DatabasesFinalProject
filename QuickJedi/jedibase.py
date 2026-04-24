@@ -11,21 +11,9 @@ class QuickJEDI:
         self.c_ins = cost_ins
         self.c_ren = cost_ren
 
-    def _get_subtree_sizes(self, t_data):
-        """Pre-calculates the aggregate size of every subtree."""
-        sizes = np.zeros(t_data["size"])
-        # Traverse backwards from leaves to root to aggregate sizes
-        for i in range(t_data["size"] - 1, -1, -1):
-            child_size = sum(sizes[c] for c in t_data["children"][i])
-            sizes[i] = 1 + child_size
-        return sizes
-
     def compare(self, tree1, tree2):
         t1, t2 = tree1.jedi_data, tree2.jedi_data
         n, m = t1["size"], t2["size"]
-
-        sz1 = self._get_subtree_sizes(t1)
-        sz2 = self._get_subtree_sizes(t2)
 
         
         # dt[i, j] stores the distance between subtree i (Tree 1) and subtree j (Tree 2)
@@ -41,48 +29,57 @@ class QuickJEDI:
         for i in range(1, n + 1):
             for j in range(1, m + 1):
                 type1, type2 = t1["types"][i-1], t2["types"][j-1]
-                
-                # Standard Node Operation Cost
+                label1, label2 = t1["labels"][i-1], t2["labels"][j-1]
+
+                # --- Path A: Direct Match / Rename ---
+                # Per your requirement: Mismatched types = Delete + Insert
                 if type1 != type2:
                     node_op_cost = self.c_del + self.c_ins
+                elif label1 != label2:
+                    node_op_cost = self.c_ren
                 else:
-                    node_op_cost = self.c_ren if t1["labels"][i-1] != t2["labels"][j-1] else 0.0
+                    node_op_cost = 0.0
 
-                # Sort children by aggregate size before matching
-                c1 = sorted(t1["children"][i-1], key=lambda x: sz1[x])
-                c2 = sorted(t2["children"][j-1], key=lambda x: sz2[x])
-
+                # Forest distance (matching the children)
                 if type1 == NodeType.ARRAY and type2 == NodeType.ARRAY:
                     f_dist = self._sed_array(t1, t2, i-1, j-1, dt)
                 else:
-                    # Bipartite matching benefits from the sorted sizes
-                    f_dist = self._min_weight_matching(c1, c2, dt)
+                    f_dist = self._min_weight_matching(t1["children"][i-1], t2["children"][j-1], dt)
                 
                 res_match = node_op_cost + f_dist
-                res_del = self.c_del + self._match_single_to_forest(j-1, t1["children"][i-1], dt, sz1, sz2, single_is_t1=False)
-                res_ins = self.c_ins + self._match_single_to_forest(i-1, t2["children"][j-1], dt, sz1, sz2, single_is_t1=True)
+
+                # --- Path B: Delete current T1 node, match children to T2 subtree ---
+                res_del = self.c_del + self._match_single_to_forest(j-1, t1["children"][i-1], dt, single_is_t1=False)
+                
+                # --- Path C: Insert current T2 node, match T1 subtree to children ---
+                res_ins = self.c_ins + self._match_single_to_forest(i-1, t2["children"][j-1], dt, single_is_t1=True)
 
                 dt[i, j] = min(res_match, res_del, res_ins)
             
         return dt[n, m]
 
-    def _match_single_to_forest(self, s_idx, f_indices, dt, sz1, sz2, single_is_t1):
+    def _match_single_to_forest(self, s_idx, f_indices, dt, single_is_t1):
+        """
+        Matches a single subtree (s_idx) against a forest (f_indices).
+        Logic: Pick the best child to match the subtree, and delete/insert the rest.
+        """
         if not f_indices:
             return dt[s_idx + 1, 0] if single_is_t1 else dt[0, s_idx + 1]
         
-        # Using sizes to quickly calculate total forest cost
-        if single_is_t1:
-            total_f_cost = sum(sz2[idx] * self.c_ins for idx in f_indices)
-        else:
-            total_f_cost = sum(sz1[idx] * self.c_del for idx in f_indices)
+        # Cost to delete/insert the entire forest
+        if single_is_t1: # Forest is in Tree 2 (Insertion)
+            total_f_cost = sum(dt[0, idx + 1] for idx in f_indices)
+        else: # Forest is in Tree 1 (Deletion)
+            total_f_cost = sum(dt[idx + 1, 0] for idx in f_indices)
         
         best_cost = float('inf')
         for f_idx in f_indices:
-            # SAS Pruning could be inserted here to skip massive size mismatches
             if single_is_t1:
-                current = dt[s_idx + 1, f_idx + 1] + (total_f_cost - sz2[f_idx] * self.c_ins)
+                # Match T1(s_idx) to T2(f_idx), insert other T2 children
+                current = dt[s_idx + 1, f_idx + 1] + (total_f_cost - dt[0, f_idx + 1])
             else:
-                current = dt[f_idx + 1, s_idx + 1] + (total_f_cost - sz1[f_idx] * self.c_del)
+                # Match T1(f_idx) to T2(s_idx), delete other T1 children
+                current = dt[f_idx + 1, s_idx + 1] + (total_f_cost - dt[f_idx + 1, 0])
             best_cost = min(best_cost, current)
             
         return best_cost
