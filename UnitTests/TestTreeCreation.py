@@ -7,6 +7,9 @@ def main():
     tree = JsonTree(data)
 
     tree.printTreeBFS()
+    node = tree.root
+
+    print(node.children[0].label)
 
 if __name__ == "__main__":
     main()
