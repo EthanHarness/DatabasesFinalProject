@@ -130,6 +130,7 @@ def main():
     qj = QuickJEDI()
 
     editDistance = qj.compare(t1, t2)
+    print(editDistance)
 
 
 if __name__ == "__main__":
