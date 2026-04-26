@@ -3,11 +3,11 @@ from TreeStructure.CreateTree import JsonTree
 from TreeStructure.TreeDistance import JediDistance
 
 def main():
-    path1 = "./UnitTests/TreeStructurePackageTestFile.txt"
+    path1 = "./UnitTests/json1.txt"
     data1 = loadJson(path1)
     tree1 = JsonTree(data1)
 
-    path2 = "./UnitTests/JsonParserPackageTestFile.txt"
+    path2 = "./UnitTests/json2.txt"
     data2 = loadJson(path2)
     tree2 = JsonTree(data2)
 
@@ -16,7 +16,7 @@ def main():
 
     dist_computer = JediDistance(tree1, tree2)
 
-    dist_computer.jedi_baseline()
+    print(dist_computer.jedi_baseline())
 
 
 
