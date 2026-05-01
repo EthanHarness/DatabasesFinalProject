@@ -2,7 +2,7 @@ from JsonParser.ParsedJson import loadJson
 from TreeStructure.CreateTree import JsonTree
 
 from QuickJEDI.jediBaseline import BaselineJEDI
-from QuickJEDI.QuickJEDI import QuickJEDI
+from QuickJEDI.quickJedi import QuickJEDI
 import time
 
 def main():
