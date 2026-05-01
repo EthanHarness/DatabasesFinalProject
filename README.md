@@ -1,4 +1,5 @@
 To setup locally first run 'py -m pip install -e .' from the DatabasesFinalProject directory.
+To run our comparison script run 'py -m ComparisonTests.runComparison' from the DatabasesFinalProject directory.
 
 To run a test script run 'py -m UnitTests.TestTreeCreation' from the DatabasesFinalProject directory.
 Can change the testing script but you must ensure you are in DatabasesFinalProject otherwise you will get
