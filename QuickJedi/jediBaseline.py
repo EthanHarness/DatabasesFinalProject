@@ -2,8 +2,10 @@ from TreeStructure.CreateTree import JsonTree
 from TreeStructure.CreateTree import NodeType
 import math
 
-class JediDistance:
-    def __init__(self, t1, t2):
+class BaselineJEDI:
+
+    def compare(self, t1, t2):
+
         self.t1 = t1
         self.t2 = t2
 
@@ -24,8 +26,6 @@ class JediDistance:
         '''
         self.n1 = len(self.t1_traversal_list)
         self.n2 = len(self.t2_traversal_list)
-
-    def jedi_baseline(self):
 
         ## Check for empty/malformed trees
         ## If either tree has no nodes dist is the cost to insert/delete all nodes from the other tree
@@ -208,69 +208,69 @@ class JediDistance:
         ## Matches each left child to its cheapest available right child
         ## Un-comment this and delete/comment-out 'memo = {}' & 'def solve' to use
         #
-        #total_cost = 0
-        #matched_right_indices = set()
-        #
-        #for left_child in left:
-        #    # Base case: Cost of deleting the left child if there is no better match available
-        #    best_match_cost = dt[(left_child, 0)]
-        #    best_match_idx = -1
-        #    
-        #    for idx, right_child in enumerate(right):
-        #        if idx in matched_right_indices:
-        #            continue
-        #        
-        #        current_cost = dt[(left_child, right_child)]
-        #        
-        #        # Only match if renaming cost is cheaper than deleting cost
-        #        if current_cost < best_match_cost:
-        #            best_match_cost = current_cost
-        #            best_match_idx = idx
-        #    
-        #    if best_match_idx != -1:
-        #        total_cost += best_match_cost
-        #        matched_right_indices.add(best_match_idx)
-        #    else:
-        #        # The cheapest cost is deleting
-        #        total_cost += best_match_cost
-        #        
-        ## Insert remaining unmatched right children
-        #for idx, right_child in enumerate(right):
-        #    if idx not in matched_right_indices:
-        #        total_cost += dt[(0, right_child)]
-        #        
-        #return total_cost
+        total_cost = 0
+        matched_right_indices = set()
+        
+        for left_child in left:
+           # Base case: Cost of deleting the left child if there is no better match available
+           best_match_cost = dt[(left_child, 0)]
+           best_match_idx = -1
+           
+           for idx, right_child in enumerate(right):
+               if idx in matched_right_indices:
+                   continue
+               
+               current_cost = dt[(left_child, right_child)]
+               
+               # Only match if renaming cost is cheaper than deleting cost
+               if current_cost < best_match_cost:
+                   best_match_cost = current_cost
+                   best_match_idx = idx
+           
+           if best_match_idx != -1:
+               total_cost += best_match_cost
+               matched_right_indices.add(best_match_idx)
+           else:
+               # The cheapest cost is deleting
+               total_cost += best_match_cost
+               
+        # Insert remaining unmatched right children
+        for idx, right_child in enumerate(right):
+           if idx not in matched_right_indices:
+               total_cost += dt[(0, right_child)]
+               
+        return total_cost
 
-        memo = {}
+        # memo = {}
 
-        def solve(i, mask):
-            # i = which left child we are considering
-            # mask = which right children have already been matched
-            if i == n:
-                total = 0
-                for j in range(m):
-                    if not (mask & (1 << j)):
-                        total += dt[(0, right[j])]   # insert unmatched right subtree
-                return total
+        # def solve(i, mask):
+        #     # i = which left child we are considering
+        #     # mask = which right children have already been matched
+        #     if i == n:
+        #         total = 0
+        #         for j in range(m):
+        #             if not (mask & (1 << j)):
+        #                 total += dt[(0, right[j])]   # insert unmatched right subtree
+        #         return total
 
-            key = (i, mask)
-            if key in memo:
-                return memo[key]
+        #     key = (i, mask)
+        #     if key in memo:
+        #         return memo[key]
 
-            # Option 1: delete this left child subtree
-            best = dt[(left[i], 0)] + solve(i + 1, mask)
+        #     # Option 1: delete this left child subtree
+        #     best = dt[(left[i], 0)] + solve(i + 1, mask)
 
-            # Option 2: match this left child to some unmatched right child
-            for j in range(m):
-                if not (mask & (1 << j)):
-                    cost = dt[(left[i], right[j])] + solve(i + 1, mask | (1 << j))
-                    if cost < best:
-                        best = cost
+        #     # Option 2: match this left child to some unmatched right child
+        #     for j in range(m):
+        #         if not (mask & (1 << j)):
+        #             cost = dt[(left[i], right[j])] + solve(i + 1, mask | (1 << j))
+        #             if cost < best:
+        #                 best = cost
 
-            memo[key] = best
-            return best
+        #     memo[key] = best
+        #     return best
 
-        return solve(0, 0)
+        # return solve(0, 0)
 
     def postorder(self, root):
         out = []
