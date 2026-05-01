@@ -1,8 +1,8 @@
 from JsonParser.ParsedJson import loadJson
 from TreeStructure.CreateTree import JsonTree
-from QuickJEDI.QuickJEDI import QuickJEDI
-from QuickJEDI.JEDIBaseOld import JEDIBase
-from QuickJEDI.JediModified import JediDistance
+
+from QuickJedi.jediBaseline import BaselineJEDI
+from QuickJedi.quickJedi import QuickJEDI
 import time
 
 def main():
@@ -12,20 +12,21 @@ def main():
     t1 = JsonTree(js1)
     t2 = JsonTree(js2)
 
+    bs = BaselineJEDI()
     qj = QuickJEDI()
-    bs = JEDIBase()
-    bsNew = JediDistance(t1, t2)
-
-    bsStart = time.perf_counter()
-    bsDist = bsNew.jedi_baseline()
-    bsEnd = time.perf_counter()
 
     qjStart = time.perf_counter()
     qjDist = qj.compare(t1, t2)
     qjEnd = time.perf_counter()
+    
+    print(f"Quick JEDI Algorithm (runnint time, difference): ({qjEnd-qjStart}, {qjDist})")
+
+
+    bsStart = time.perf_counter()
+    bsDist = bs.compare(t1, t2)
+    bsEnd = time.perf_counter()
 
     print(f"JEDI Base Algorithm (runnint time, difference): ({bsEnd-bsStart}, {bsDist})")
-    print(f"Quick JEDI Algorithm (runnint time, difference): ({qjEnd-qjStart}, {qjDist})")
 
 
 if __name__ == "__main__":
