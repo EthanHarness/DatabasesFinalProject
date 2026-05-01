@@ -1,6 +1,5 @@
 import numpy as np
-from JsonParser.ParsedJson import loadJson
-from TreeStructure.CreateTree import JsonTree, NodeType
+from TreeStructure.CreateTree import NodeType
 
 
 class QuickJEDI:
@@ -171,23 +170,3 @@ class QuickJEDI:
                 )
 
         return dp[n, m]
-        
-def main():
-    js1 = loadJson("./QuickJedi/testFile1.txt")
-    js2 = loadJson("./QuickJedi/testFile2.txt")
-
-    t1 = JsonTree(js1)
-    t2 = JsonTree(js2)
-
-    qj = QuickJEDI()
-
-    editDistance = qj.compare(t1, t2)
-    print(editDistance)
-
-
-if __name__ == "__main__":
-    import time
-    start = time.perf_counter()
-    main()
-    end = time.perf_counter()
-    print(end - start)
