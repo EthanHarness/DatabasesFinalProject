@@ -25,9 +25,6 @@ class JediDistance:
         self.n1 = len(self.t1_traversal_list)
         self.n2 = len(self.t2_traversal_list)
 
-        print(f"Tree 1 size: {self.n1}")
-        print(f"Tree 2 size: {self.n2}")
-
     def jedi_baseline(self):
 
         ## Check for empty/malformed trees
@@ -48,7 +45,8 @@ class JediDistance:
         #intilizes first row and first column of data structures (Empty tree cases)
         self.init_base_cases(df, dt)
 
-        for v in self.t1_traversal_list:
+        for i1,v in enumerate(self.t1_traversal_list):
+            #print(f"{i1}/{len(self.t1_traversal_list)}")
             for w in self.t2_traversal_list:
                 insF = self.compute_insF(df, v, w)
                 insT = self.compute_insT(dt, v, w)

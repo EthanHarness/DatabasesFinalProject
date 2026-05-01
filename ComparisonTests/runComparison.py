@@ -1,7 +1,8 @@
 from JsonParser.ParsedJson import loadJson
 from TreeStructure.CreateTree import JsonTree
 from QuickJEDI.QuickJEDI import QuickJEDI
-from QuickJEDI.JEDIBase import JEDIBase
+from QuickJEDI.JEDIBaseOld import JEDIBase
+from QuickJEDI.JediModified import JediDistance
 import time
 
 def main():
@@ -13,9 +14,10 @@ def main():
 
     qj = QuickJEDI()
     bs = JEDIBase()
+    bsNew = JediDistance(t1, t2)
 
     bsStart = time.perf_counter()
-    bsDist = bs.compare(t1, t2)
+    bsDist = bsNew.jedi_baseline()
     bsEnd = time.perf_counter()
 
     qjStart = time.perf_counter()
