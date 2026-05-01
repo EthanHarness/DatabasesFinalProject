@@ -198,79 +198,74 @@ class BaselineJEDI:
 
 
     def BPM(self, dt, v, w):
-        left = v.children
-        right = w.children
+        left_children = v.children
+        right_children = w.children
+        n, m = len(left_children), len(right_children)
 
-        n = len(left)
-        m = len(right)
+        if n == 0: return sum(dt[(0, c)] for c in right_children)
+        if m == 0: return sum(dt[(c, 0)] for c in left_children)
 
-        ## Using Greedy Approximation
-        ## Matches each left child to its cheapest available right child
-        ## Un-comment this and delete/comment-out 'memo = {}' & 'def solve' to use
-        #
-        total_cost = 0
-        matched_right_indices = set()
-        
-        for left_child in left:
-           # Base case: Cost of deleting the left child if there is no better match available
-           best_match_cost = dt[(left_child, 0)]
-           best_match_idx = -1
-           
-           for idx, right_child in enumerate(right):
-               if idx in matched_right_indices:
-                   continue
-               
-               current_cost = dt[(left_child, right_child)]
-               
-               # Only match if renaming cost is cheaper than deleting cost
-               if current_cost < best_match_cost:
-                   best_match_cost = current_cost
-                   best_match_idx = idx
-           
-           if best_match_idx != -1:
-               total_cost += best_match_cost
-               matched_right_indices.add(best_match_idx)
-           else:
-               # The cheapest cost is deleting
-               total_cost += best_match_cost
-               
-        # Insert remaining unmatched right children
-        for idx, right_child in enumerate(right):
-           if idx not in matched_right_indices:
-               total_cost += dt[(0, right_child)]
-               
-        return total_cost
+        # 1. Build the Cost Matrix (size (n+m) x (n+m))
+        # Top-left: Match v_i with w_j
+        # Top-right: Delete v_i (Diagonal = delete_cost, others = inf)
+        # Bottom-left: Insert w_j (Diagonal = insert_cost, others = inf)
+        # Bottom-right: Dummy zeros
+        size = n + m
+        inf = float('inf')
+        matrix = [[0 for _ in range(size)] for _ in range(size)]
 
-        # memo = {}
+        for i in range(size):
+            for j in range(size):
+                if i < n and j < m:
+                    matrix[i][j] = dt[(left_children[i], right_children[j])]
+                elif i < n and j >= m:
+                    matrix[i][j] = dt[(left_children[i], 0)] if (j - m) == i else inf
+                elif i >= n and j < m:
+                    matrix[i][j] = dt[(0, right_children[j])] if (i - n) == j else inf
+                else:
+                    matrix[i][j] = 0
 
-        # def solve(i, mask):
-        #     # i = which left child we are considering
-        #     # mask = which right children have already been matched
-        #     if i == n:
-        #         total = 0
-        #         for j in range(m):
-        #             if not (mask & (1 << j)):
-        #                 total += dt[(0, right[j])]   # insert unmatched right subtree
-        #         return total
+        return self._min_cost_assignment(matrix)
 
-        #     key = (i, mask)
-        #     if key in memo:
-        #         return memo[key]
+    def _min_cost_assignment(self, matrix):
+        """Pure Python Hungarian Algorithm (O(N^3))"""
+        n = len(matrix)
+        u, v = [0] * (n + 1), [0] * (n + 1)
+        p, way = [0] * (n + 1), [0] * (n + 1)
 
-        #     # Option 1: delete this left child subtree
-        #     best = dt[(left[i], 0)] + solve(i + 1, mask)
-
-        #     # Option 2: match this left child to some unmatched right child
-        #     for j in range(m):
-        #         if not (mask & (1 << j)):
-        #             cost = dt[(left[i], right[j])] + solve(i + 1, mask | (1 << j))
-        #             if cost < best:
-        #                 best = cost
-
-        #     memo[key] = best
-        #     return best
-
-        # return solve(0, 0)
+        for i in range(1, n + 1):
+            p[0] = i
+            j0 = 0
+            minv = [float('inf')] * (n + 1)
+            used = [False] * (n + 1)
+            
+            while True:
+                used[j0] = True
+                i0, j1, delta = p[j0], 0, float('inf')
+                for j in range(1, n + 1):
+                    if not used[j]:
+                        cur = matrix[i0 - 1][j - 1] - u[i0] - v[j]
+                        if cur < minv[j]:
+                            minv[j], way[j] = cur, j0
+                        if minv[j] < delta:
+                            delta, j1 = minv[j], j
+                
+                for j in range(n + 1):
+                    if used[j]:
+                        u[p[j]] += delta
+                        v[j] -= delta
+                    else:
+                        minv[j] -= delta
+                j0 = j1
+                if p[j0] == 0: break
+            
+            while True:
+                j1 = way[j0]
+                p[j0] = p[j1]
+                j0 = j1
+                if j0 == 0: break
+                
+        return -v[0]
 
     def postorder(self, root):
         out = []
