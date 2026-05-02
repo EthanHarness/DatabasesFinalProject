@@ -45,7 +45,7 @@ class BaselineJEDI:
         #intilizes first row and first column of data structures (Empty tree cases)
         self.init_base_cases(df, dt)
 
-        for i1,v in enumerate(self.t1_traversal_list):
+        for v in self.t1_traversal_list:
             #print(f"{i1}/{len(self.t1_traversal_list)}")
             for w in self.t2_traversal_list:
                 insF = self.compute_insF(df, v, w)
@@ -198,79 +198,103 @@ class BaselineJEDI:
 
 
     def BPM(self, dt, v, w):
-        left = v.children
-        right = w.children
+        left = list(v.children)
+        right = list(w.children)
 
         n = len(left)
         m = len(right)
+        k = max(n, m)
 
-        ## Using Greedy Approximation
-        ## Matches each left child to its cheapest available right child
-        ## Un-comment this and delete/comment-out 'memo = {}' & 'def solve' to use
-        #
-        # total_cost = 0
-        # matched_right_indices = set()
-        
-        # for left_child in left:
-        #    # Base case: Cost of deleting the left child if there is no better match available
-        #    best_match_cost = dt[(left_child, 0)]
-        #    best_match_idx = -1
-           
-        #    for idx, right_child in enumerate(right):
-        #        if idx in matched_right_indices:
-        #            continue
-               
-        #        current_cost = dt[(left_child, right_child)]
-               
-        #        # Only match if renaming cost is cheaper than deleting cost
-        #        if current_cost < best_match_cost:
-        #            best_match_cost = current_cost
-        #            best_match_idx = idx
-           
-        #    if best_match_idx != -1:
-        #        total_cost += best_match_cost
-        #        matched_right_indices.add(best_match_idx)
-        #    else:
-        #        # The cheapest cost is deleting
-        #        total_cost += best_match_cost
-               
-        # # Insert remaining unmatched right children
-        # for idx, right_child in enumerate(right):
-        #    if idx not in matched_right_indices:
-        #        total_cost += dt[(0, right_child)]
-               
-        # return total_cost
+        # pad with None = empty tree
+        while len(left) < k:
+            left.append(None)
 
-        memo = {}
+        while len(right) < k:
+            right.append(None)
 
-        def solve(i, mask):
-            # i = which left child we are considering
-            # mask = which right children have already been matched
-            if i == n:
-                total = 0
-                for j in range(m):
-                    if not (mask & (1 << j)):
-                        total += dt[(0, right[j])]   # insert unmatched right subtree
-                return total
+        cost = [[0 for _ in range(k)] for _ in range(k)]
 
-            key = (i, mask)
-            if key in memo:
-                return memo[key]
+        for i in range(k):
+            for j in range(k):
+                a = left[i]
+                b = right[j]
 
-            # Option 1: delete this left child subtree
-            best = dt[(left[i], 0)] + solve(i + 1, mask)
+                if a is None and b is None:
+                    cost[i][j] = 0
+                elif a is None:
+                    cost[i][j] = dt[(0, b)]      # insert b
+                elif b is None:
+                    cost[i][j] = dt[(a, 0)]      # delete a
+                else:
+                    cost[i][j] = dt[(a, b)]      # match a with b
 
-            # Option 2: match this left child to some unmatched right child
-            for j in range(m):
-                if not (mask & (1 << j)):
-                    cost = dt[(left[i], right[j])] + solve(i + 1, mask | (1 << j))
-                    if cost < best:
-                        best = cost
+        return self.hungarian(cost)
 
-            memo[key] = best
-            return best
+    def hungarian(self, cost):
+        n = len(cost)
 
-        return solve(0, 0)
+        # potentials
+        u = [0] * (n + 1)
+        v = [0] * (n + 1)
+
+        # p[j] = row assigned to column j
+        p = [0] * (n + 1)
+        way = [0] * (n + 1)
+
+        for i in range(1, n + 1):
+            p[0] = i
+            j0 = 0
+            minv = [math.inf] * (n + 1)
+            used = [False] * (n + 1)
+
+            while True:
+                used[j0] = True
+                i0 = p[j0]
+                delta = math.inf
+                j1 = 0
+
+                for j in range(1, n + 1):
+                    if not used[j]:
+                        cur = cost[i0 - 1][j - 1] - u[i0] - v[j]
+
+                        if cur < minv[j]:
+                            minv[j] = cur
+                            way[j] = j0
+
+                        if minv[j] < delta:
+                            delta = minv[j]
+                            j1 = j
+
+                for j in range(0, n + 1):
+                    if used[j]:
+                        u[p[j]] += delta
+                        v[j] -= delta
+                    else:
+                        minv[j] -= delta
+
+                j0 = j1
+
+                if p[j0] == 0:
+                    break
+
+            while True:
+                j1 = way[j0]
+                p[j0] = p[j1]
+                j0 = j1
+
+                if j0 == 0:
+                    break
+
+        assignment = [0] * n
+
+        for j in range(1, n + 1):
+            assignment[p[j] - 1] = j - 1
+
+        total = 0
+        for i in range(n):
+            total += cost[i][assignment[i]]
+
+        return total
 
     def postorder(self, root):
         out = []
@@ -292,6 +316,9 @@ class BaselineJEDI:
 
     def rename_cost(self, v, w):
         if v.type != w.type:
-            return 2   # delete v + insert w
+            return 2
+
+        if v.type == NodeType.LITERAL:
+            return 0 if type(v.label) is type(w.label) and v.label == w.label else 1
         
         return 0 if v.label == w.label else 1
